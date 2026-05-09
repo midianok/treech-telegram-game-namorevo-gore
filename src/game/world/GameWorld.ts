@@ -39,8 +39,9 @@ export class GameWorld {
   }
 
   resize(width: number, height: number): void {
-    const groundTopY = Math.min(this.groundTopY, height - GROUND_HEIGHT);
-    const groundHeight = height - groundTopY;
+    this.groundTopY = height - GROUND_HEIGHT;
+    const groundTopY = this.groundTopY;
+    const groundHeight = GROUND_HEIGHT;
 
     this.background.setPosition(width / 2, height / 2).setSize(width, height);
     this.wall.setPosition(width / 2, height / 2).setSize(width, height);
