@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 
+import { NamorevoGoreApi } from '../api/namorevoGore';
 import { preloadGameAssets } from '../game/assets';
 import { getPipeSpawnDelay, getPipeSpeed } from '../game/difficulty';
 import { Bird } from '../game/entities/Bird';
@@ -10,7 +11,7 @@ import { BestScoreRepository } from '../game/scoring/BestScoreRepository';
 import { GameSession } from '../game/state/GameSession';
 import { GameHud } from '../game/ui/GameHud';
 import { GameWorld } from '../game/world/GameWorld';
-import { hapticImpact, hapticNotification } from '../telegram';
+import { getTelegramPlayerContext, hapticImpact, hapticNotification } from '../telegram';
 
 const SCENE_KEY = 'FlappyScene';
 const OFFSCREEN_TOP_LIMIT = -20;
@@ -19,12 +20,17 @@ const OFFSCREEN_BOTTOM_PADDING = 40;
 export class FlappyScene extends Phaser.Scene {
   private readonly session = new GameSession();
   private readonly bestScoreRepository = new BestScoreRepository();
+  private readonly namorevoGoreApi = new NamorevoGoreApi();
 
   private bird!: Bird;
   private hud!: GameHud;
   private pipes!: PipeManager;
   private world!: GameWorld;
+  private playerContext = getTelegramPlayerContext();
   private pipeTimer: Phaser.Time.TimerEvent | null = null;
+  private scoreSyncRequestId = 0;
+  private bestScoreRequestId = 0;
+  private userBestScoreLoaded = false;
 
   private get width(): number {
     return this.scale.width;
@@ -43,7 +49,10 @@ export class FlappyScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.session.reset(this.bestScoreRepository.read());
+    this.scoreSyncRequestId += 1;
+    this.playerContext = getTelegramPlayerContext();
+    this.userBestScoreLoaded = false;
+    this.session.reset(this.playerContext ? 0 : this.bestScoreRepository.read());
 
     this.world = new GameWorld(this);
     this.bird = new Bird(this);
@@ -54,6 +63,11 @@ export class FlappyScene extends Phaser.Scene {
     this.bird.create(this.height / 2);
     this.hud.create(this.width, this.height, this.session.bestScore);
     this.pipes.create();
+
+    if (this.playerContext) {
+      this.hud.showBestScoreLoading();
+      void this.loadUserBestScore(++this.bestScoreRequestId);
+    }
 
     this.registerPhysics();
     registerGameInput(this, {
@@ -152,12 +166,110 @@ export class FlappyScene extends Phaser.Scene {
     this.bird.markDead();
     this.pipes.stop();
 
-    if (this.session.commitBestScore()) {
+    if (!this.playerContext && this.session.commitBestScore()) {
       this.bestScoreRepository.write(this.session.bestScore);
     }
 
-    this.hud.setBestScore(this.session.bestScore);
+    if (!this.playerContext || this.userBestScoreLoaded) {
+      this.hud.setBestScore(this.session.bestScore);
+    }
+
     this.hud.showGameOver(this.session.score);
+    this.bestScoreRequestId += 1;
+    void this.syncNamorevoGoreScore(++this.scoreSyncRequestId, this.session.score);
+  }
+
+  private async loadUserBestScore(requestId: number): Promise<void> {
+    if (!this.playerContext) {
+      return;
+    }
+
+    try {
+      const userScore = await this.namorevoGoreApi.getUserScore(this.playerContext.userId);
+
+      if (requestId !== this.bestScoreRequestId) {
+        return;
+      }
+
+      const bestScore = userScore?.score ?? 0;
+      this.session.bestScore = bestScore;
+      this.userBestScoreLoaded = true;
+      this.hud.setBestScore(bestScore);
+    } catch (error) {
+      if (requestId !== this.bestScoreRequestId) {
+        return;
+      }
+
+      console.error('Failed to load NamorevoGore user score', error);
+      this.userBestScoreLoaded = false;
+      this.hud.showBestScoreUnavailable();
+    }
+  }
+
+  private async syncNamorevoGoreScore(requestId: number, score: number): Promise<void> {
+    await this.saveScoreIfHigherThanServer(requestId, score);
+
+    try {
+      const leaderboard = await this.namorevoGoreApi.getLeaderboard();
+      if (requestId !== this.scoreSyncRequestId) {
+        return;
+      }
+
+      this.hud.showLeaderboard(leaderboard, this.playerContext?.userId ?? null);
+    } catch (error) {
+      if (requestId !== this.scoreSyncRequestId) {
+        return;
+      }
+
+      console.error('Failed to sync NamorevoGore leaderboard', error);
+      this.hud.showLeaderboardError();
+    }
+  }
+
+  private async saveScoreIfHigherThanServer(requestId: number, score: number): Promise<void> {
+    if (!this.playerContext) {
+      return;
+    }
+
+    try {
+      const currentUserScore = await this.namorevoGoreApi.getUserScore(this.playerContext.userId);
+      const currentBestScore = currentUserScore?.score ?? 0;
+
+      if (requestId !== this.scoreSyncRequestId) {
+        return;
+      }
+
+      this.session.bestScore = Math.max(this.session.bestScore, currentBestScore);
+      this.userBestScoreLoaded = true;
+      this.hud.setBestScore(this.session.bestScore);
+
+      if (score <= currentBestScore) {
+        return;
+      }
+
+      await this.namorevoGoreApi.submitScore({
+        userId: this.playerContext.userId,
+        chatId: this.playerContext.chatId,
+        score,
+      });
+
+      if (requestId !== this.scoreSyncRequestId) {
+        return;
+      }
+
+      this.session.bestScore = score;
+      this.userBestScoreLoaded = true;
+      this.hud.setBestScore(score);
+    } catch (error) {
+      if (requestId !== this.scoreSyncRequestId) {
+        return;
+      }
+
+      console.error('Failed to sync NamorevoGore user score', error);
+      if (!this.userBestScoreLoaded) {
+        this.hud.showBestScoreUnavailable();
+      }
+    }
   }
 
   private resetGame(): void {

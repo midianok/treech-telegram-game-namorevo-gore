@@ -5,6 +5,15 @@ declare global {
         ready(): void;
         expand(): void;
         requestFullscreen?(): void;
+        initData?: string;
+        initDataUnsafe?: {
+          user?: {
+            id?: number;
+          };
+          chat?: {
+            id?: number;
+          };
+        };
         HapticFeedback: {
           impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
           notificationOccurred(type: 'error' | 'success' | 'warning'): void;
@@ -17,6 +26,11 @@ declare global {
 }
 
 const twa = window.Telegram?.WebApp;
+
+export interface TelegramPlayerContext {
+  userId: number;
+  chatId: number;
+}
 
 export function initTelegram(): void {
   if (!twa) return;
@@ -31,4 +45,17 @@ export function hapticImpact(style: 'light' | 'medium' | 'heavy' = 'light'): voi
 
 export function hapticNotification(type: 'error' | 'success' | 'warning'): void {
   twa?.HapticFeedback.notificationOccurred(type);
+}
+
+export function getTelegramPlayerContext(): TelegramPlayerContext | null {
+  const userId = twa?.initDataUnsafe?.user?.id;
+
+  if (typeof userId !== 'number') {
+    return null;
+  }
+
+  return {
+    userId,
+    chatId: twa?.initDataUnsafe?.chat?.id ?? userId,
+  };
 }
