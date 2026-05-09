@@ -1,7 +1,19 @@
 :root {
+  --ground-background:
+    linear-gradient(#2a0510 0 4px, transparent 4px) 0 0 / 96px 72px,
+    linear-gradient(#1f1014 0 4px, transparent 4px) 2px 4px / 96px 72px,
+    linear-gradient(#1f1014 0 4px, transparent 4px) 52px 4px / 96px 72px,
+    linear-gradient(#1f1014 0 4px, transparent 4px) 27px 40px / 96px 72px,
+    linear-gradient(90deg, transparent 0 50px, #0c0808 50px 52px, transparent 52px) 0 0 / 96px 72px,
+    linear-gradient(90deg, transparent 0 25px, #0c0808 25px 27px, transparent 27px 75px, #0c0808 75px 77px, transparent 77px) 0 38px / 96px 72px,
+    linear-gradient(transparent 0 36px, #0c0808 36px 39px, transparent 39px) 0 0 / 96px 72px,
+    linear-gradient(90deg, transparent 0 2px, #271518 2px 46px, transparent 46px 52px, #271518 52px 96px) 0 4px / 96px 72px,
+    linear-gradient(90deg, transparent 0 27px, #271518 27px 71px, transparent 71px) 0 40px / 96px 72px,
+    #181010;
   color-scheme: light;
   font-family: Arial, Helvetica, sans-serif;
-  background: #080004;
+  background: var(--ground-background);
+  background-position: bottom left;
 }
 
 *,
@@ -15,13 +27,20 @@ body,
 #app {
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
   margin: 0;
   padding: 0;
 }
 
 body {
   overflow: hidden;
-  background: #080004;
+  background: var(--ground-background);
+  background-position: bottom left;
+}
+
+#app {
+  background: var(--ground-background);
+  background-position: bottom left;
 }
 
 canvas {
