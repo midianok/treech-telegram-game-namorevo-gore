@@ -5,7 +5,7 @@ export const BIRD_GRAVITY = 1450;
 export const BIRD_JUMP_VELOCITY = -470;
 
 export const PIPE_SPEED = -190;
-export const PIPE_GAP = 185;
+export const PIPE_GAP = 200;
 export const PIPE_WIDTH = 72;
 
 export const GROUND_HEIGHT = 72;
