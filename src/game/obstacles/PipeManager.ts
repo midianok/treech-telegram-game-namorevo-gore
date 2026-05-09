@@ -11,6 +11,7 @@ const PIPE_SPAWN_OFFSET_X = PIPE_WIDTH;
 const SCORER_WIDTH = 10;
 const SCORER_X_OFFSET = 8;
 const SCORER_MIN_X = -20;
+const PIPE_DEPTH = 3;
 
 export class PipeManager {
   private pipes!: Phaser.Physics.Arcade.Group;
@@ -63,6 +64,7 @@ export class PipeManager {
   private createPipe(x: number, y: number, height: number, speed: number, flipY: boolean): void {
     const pipe = this.pipes.create(x, y, AssetKey.Pipe) as Phaser.Physics.Arcade.Sprite;
     pipe.setDisplaySize(PIPE_WIDTH, height).refreshBody();
+    pipe.setDepth(PIPE_DEPTH);
     pipe.setVelocityX(speed);
     pipe.setFlipY(flipY);
   }
