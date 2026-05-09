@@ -12,23 +12,55 @@ const SCORER_WIDTH = 10;
 const SCORER_X_OFFSET = 8;
 const SCORER_MIN_X = -20;
 const PIPE_DEPTH = 3;
+const HITBOX_SEGMENTS = 20;
+const ALPHA_THRESHOLD = 10;
 
-// Контур pipe.png по анализу альфа-канала: конусообразный, узкий кончик (~42% ширины)
-// расширяется к основанию (~93%). Arcade Physics поддерживает только AABB на тело,
-// поэтому форма аппроксимируется лесенкой из нескольких прямоугольных зон.
-// yStart/yEnd — доли по высоте сверху вниз (для не-флипнутого спрайта: 0=кончик, 1=основание).
-// widthRatio — доля от PIPE_WIDTH.
-const PIPE_HITBOX_SEGMENTS: ReadonlyArray<{
+interface HitboxSegment {
   yStart: number;
   yEnd: number;
   widthRatio: number;
-}> = [
-  { yStart: 0.02, yEnd: 0.05, widthRatio: 0.42 },
-  { yStart: 0.05, yEnd: 0.12, widthRatio: 0.62 },
-  { yStart: 0.12, yEnd: 0.22, widthRatio: 0.78 },
-  { yStart: 0.22, yEnd: 0.85, widthRatio: 0.84 },
-  { yStart: 0.85, yEnd: 0.99, widthRatio: 0.93 },
-];
+}
+
+function buildPipeHitboxSegments(scene: Phaser.Scene, numSegments: number): ReadonlyArray<HitboxSegment> {
+  const source = scene.textures.get(AssetKey.Pipe).getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+  const w = 'naturalWidth' in source ? source.naturalWidth : (source as HTMLCanvasElement).width;
+  const h = 'naturalHeight' in source ? source.naturalHeight : (source as HTMLCanvasElement).height;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(source as CanvasImageSource, 0, 0);
+  const { data } = ctx.getImageData(0, 0, w, h);
+
+  const result: HitboxSegment[] = [];
+  const segH = 1 / numSegments;
+
+  for (let i = 0; i < numSegments; i++) {
+    const yStart = i * segH;
+    const yEnd = (i + 1) * segH;
+    const rowStart = Math.floor(yStart * h);
+    const rowEnd = Math.min(Math.ceil(yEnd * h), h);
+
+    let minX = w;
+    let maxX = -1;
+
+    for (let row = rowStart; row < rowEnd; row++) {
+      for (let x = 0; x < w; x++) {
+        if (data[(row * w + x) * 4 + 3] > ALPHA_THRESHOLD) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+        }
+      }
+    }
+
+    if (maxX >= minX) {
+      result.push({ yStart, yEnd, widthRatio: (maxX - minX + 1) / w });
+    }
+  }
+
+  return result;
+}
 
 interface PipeLeaderZone extends Phaser.GameObjects.Zone {
   pipeVisual: Phaser.GameObjects.Image;
@@ -47,12 +79,14 @@ function isPipeLeaderZone(obj: unknown): obj is PipeLeaderZone {
 export class PipeManager {
   private pipes!: Phaser.Physics.Arcade.Group;
   private scorers!: Phaser.Physics.Arcade.Group;
+  private hitboxSegments: ReadonlyArray<HitboxSegment> = [];
 
   constructor(private readonly scene: Phaser.Scene) {}
 
   create(): void {
     this.pipes = this.scene.physics.add.group({ allowGravity: false, immovable: true });
     this.scorers = this.scene.physics.add.group({ allowGravity: false, immovable: true });
+    this.hitboxSegments = buildPipeHitboxSegments(this.scene, HITBOX_SEGMENTS);
   }
 
   get pipeGroup(): Phaser.Physics.Arcade.Group {
@@ -101,12 +135,12 @@ export class PipeManager {
 
     const topY = y - height / 2;
     const segments = flipY
-      ? PIPE_HITBOX_SEGMENTS.map((s) => ({
+      ? this.hitboxSegments.map((s) => ({
           widthRatio: s.widthRatio,
           yStart: 1 - s.yEnd,
           yEnd: 1 - s.yStart,
         }))
-      : PIPE_HITBOX_SEGMENTS;
+      : this.hitboxSegments;
 
     let isLeader = true;
     for (const seg of segments) {
