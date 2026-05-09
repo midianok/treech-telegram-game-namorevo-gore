@@ -11,7 +11,7 @@ const resources = {
         description: 'Ликвидация намора',
       },
       hud: {
-        bestScore: 'Лучший ликвидатор: {{score}}',
+        bestScore: 'Лучшая ликвидация: {{score}}',
         bestScoreLoading: 'Лучший ликвидатор: ...',
         bestScoreUnavailable: 'Лучший ликвидатор: недоступен',
         gameOverHelp: 'Счет: {{score}}\nНажми R, пробел или тапни',
