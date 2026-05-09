@@ -16,7 +16,7 @@ export function createGameConfig(): Phaser.Types.Core.GameConfig {
     physics: {
       default: 'arcade',
       arcade: {
-        debug: false,
+        debug: import.meta.env.DEV,
       },
     },
     scale: {
