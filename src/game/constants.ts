@@ -1,8 +1,8 @@
 export const GAME_WIDTH = 480;
 export const GAME_HEIGHT = 720;
 
-export const BIRD_GRAVITY = 1150;
-export const BIRD_JUMP_VELOCITY = -360;
+export const BIRD_GRAVITY = 1450;
+export const BIRD_JUMP_VELOCITY = -470;
 
 export const PIPE_SPEED = -190;
 export const PIPE_GAP = 185;

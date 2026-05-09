@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 
 import { NamorevoGoreApi } from '../api/namorevoGore';
 import { preloadGameAssets } from '../game/assets';
+import { getGameViewportSize } from '../game/config';
 import { getPipeSpawnDelay, getPipeSpeed } from '../game/difficulty';
 import { Bird } from '../game/entities/Bird';
 import { registerGameInput } from '../game/input/registerGameInput';
@@ -12,7 +13,13 @@ import { GameSession } from '../game/state/GameSession';
 import { GameHud } from '../game/ui/GameHud';
 import { GameWorld } from '../game/world/GameWorld';
 import { t } from '../i18n';
-import { getTelegramPlayerContext, hapticImpact, hapticNotification } from '../telegram';
+import {
+  getTelegramPlayerContext,
+  hapticImpact,
+  hapticNotification,
+  offTelegramViewportChanged,
+  onTelegramViewportChanged,
+} from '../telegram';
 
 const SCENE_KEY = 'FlappyScene';
 const OFFSCREEN_TOP_LIMIT = -20;
@@ -32,6 +39,7 @@ export class FlappyScene extends Phaser.Scene {
   private scoreSyncRequestId = 0;
   private bestScoreRequestId = 0;
   private userBestScoreLoaded = false;
+  private readonly handleViewportResize = () => this.resizeToViewport();
 
   private get width(): number {
     return this.scale.width;
@@ -75,6 +83,16 @@ export class FlappyScene extends Phaser.Scene {
       flap: () => this.flap(),
       reset: () => this.resetGame(),
     });
+
+    window.addEventListener('resize', this.handleViewportResize);
+    window.visualViewport?.addEventListener('resize', this.handleViewportResize);
+    onTelegramViewportChanged(this.handleViewportResize);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      window.removeEventListener('resize', this.handleViewportResize);
+      window.visualViewport?.removeEventListener('resize', this.handleViewportResize);
+      offTelegramViewportChanged(this.handleViewportResize);
+    });
+    this.time.delayedCall(0, this.handleViewportResize);
   }
 
   update(): void {
@@ -283,5 +301,17 @@ export class FlappyScene extends Phaser.Scene {
 
   private isBirdOutsidePlayArea(): boolean {
     return this.bird.y < OFFSCREEN_TOP_LIMIT || this.bird.y > this.height + OFFSCREEN_BOTTOM_PADDING;
+  }
+
+  private resizeToViewport(): void {
+    const { width, height } = getGameViewportSize();
+
+    if (width === this.width && height === this.height) {
+      return;
+    }
+
+    this.scale.resize(width, height);
+    this.physics.world.setBounds(0, 0, width, height);
+    this.world.resize(width, height);
   }
 }

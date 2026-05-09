@@ -5,6 +5,8 @@ declare global {
         ready(): void;
         expand(): void;
         requestFullscreen?(): void;
+        viewportHeight?: number;
+        viewportStableHeight?: number;
         initData?: string;
         initDataUnsafe?: {
           user?: {
@@ -21,6 +23,8 @@ declare global {
         };
         isExpanded: boolean;
         platform: string;
+        onEvent?(eventType: 'viewportChanged', eventHandler: () => void): void;
+        offEvent?(eventType: 'viewportChanged', eventHandler: () => void): void;
       };
     };
   }
@@ -60,6 +64,19 @@ export function getTelegramPlayerContext(): TelegramPlayerContext | null {
     userId,
     chatId: launchChatId ?? twa?.initDataUnsafe?.chat?.id ?? userId,
   };
+}
+
+export function getTelegramViewportHeight(): number | null {
+  const height = Math.max(twa?.viewportHeight ?? 0, twa?.viewportStableHeight ?? 0);
+  return height > 0 ? height : null;
+}
+
+export function onTelegramViewportChanged(handler: () => void): void {
+  twa?.onEvent?.('viewportChanged', handler);
+}
+
+export function offTelegramViewportChanged(handler: () => void): void {
+  twa?.offEvent?.('viewportChanged', handler);
 }
 
 function getLaunchChatId(): number | null {
