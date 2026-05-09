@@ -7,6 +7,7 @@ import type { ScorerZone } from './ScorerZone';
 
 const MIN_GAP_TOP = 90;
 const GAP_BOTTOM_MARGIN = 190;
+const MAX_GAP_CENTER_DELTA = 160;
 const PIPE_SPAWN_OFFSET_X = PIPE_WIDTH;
 const SCORER_WIDTH = 10;
 const SCORER_X_OFFSET = 8;
@@ -80,6 +81,7 @@ export class PipeManager {
   private pipes!: Phaser.Physics.Arcade.Group;
   private scorers!: Phaser.Physics.Arcade.Group;
   private hitboxSegments: ReadonlyArray<HitboxSegment> = [];
+  private lastGapCenter: number | null = null;
 
   constructor(private readonly scene: Phaser.Scene) {}
 
@@ -100,8 +102,24 @@ export class PipeManager {
   spawn(score: number, sceneWidth: number, sceneHeight: number): void {
     const speed = getPipeSpeed(score);
     const gap = getPipeGap(score);
-    const gapTop = Phaser.Math.Between(MIN_GAP_TOP, sceneHeight - GAP_BOTTOM_MARGIN - gap);
-    const gapCenter = gapTop + gap / 2;
+    const halfGap = gap / 2;
+    const minGapTop = MIN_GAP_TOP;
+    const maxGapTop = sceneHeight - GAP_BOTTOM_MARGIN - gap;
+
+    let clampedMin = minGapTop;
+    let clampedMax = maxGapTop;
+    if (this.lastGapCenter !== null) {
+      clampedMin = Math.max(minGapTop, this.lastGapCenter - MAX_GAP_CENTER_DELTA - halfGap);
+      clampedMax = Math.min(maxGapTop, this.lastGapCenter + MAX_GAP_CENTER_DELTA - halfGap);
+      if (clampedMin > clampedMax) {
+        clampedMin = minGapTop;
+        clampedMax = maxGapTop;
+      }
+    }
+
+    const gapTop = Phaser.Math.Between(Math.round(clampedMin), Math.round(clampedMax));
+    const gapCenter = gapTop + halfGap;
+    this.lastGapCenter = gapCenter;
     const bottomY = gapTop + gap;
     const bottomHeight = sceneHeight - GROUND_HEIGHT - bottomY;
     const pipeX = sceneWidth + PIPE_SPAWN_OFFSET_X;
