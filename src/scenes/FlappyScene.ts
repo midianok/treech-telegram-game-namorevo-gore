@@ -11,6 +11,7 @@ import { BestScoreRepository } from '../game/scoring/BestScoreRepository';
 import { GameSession } from '../game/state/GameSession';
 import { GameHud } from '../game/ui/GameHud';
 import { GameWorld } from '../game/world/GameWorld';
+import { t } from '../i18n';
 import { getTelegramPlayerContext, hapticImpact, hapticNotification } from '../telegram';
 
 const SCENE_KEY = 'FlappyScene';
@@ -200,7 +201,7 @@ export class FlappyScene extends Phaser.Scene {
         return;
       }
 
-      console.error('Failed to load NamorevoGore user score', error);
+      console.error(t('log.failedToLoadUserScore'), error);
       this.userBestScoreLoaded = false;
       this.hud.showBestScoreUnavailable();
     }
@@ -221,7 +222,7 @@ export class FlappyScene extends Phaser.Scene {
         return;
       }
 
-      console.error('Failed to sync NamorevoGore leaderboard', error);
+      console.error(t('log.failedToSyncLeaderboard'), error);
       this.hud.showLeaderboardError();
     }
   }
@@ -265,7 +266,7 @@ export class FlappyScene extends Phaser.Scene {
         return;
       }
 
-      console.error('Failed to sync NamorevoGore user score', error);
+      console.error(t('log.failedToSyncUserScore'), error);
       if (!this.userBestScoreLoaded) {
         this.hud.showBestScoreUnavailable();
       }

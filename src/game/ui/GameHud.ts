@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
 import type { NamorevoGoreLeaderboardEntry } from '../../api/namorevoGore';
+import { t } from '../../i18n';
 
 const HUD_DEPTH = 10;
 const HUD_FONT_FAMILY = 'Arial, Helvetica, sans-serif';
@@ -34,7 +35,7 @@ export class GameHud {
       .setDepth(HUD_DEPTH);
 
     this.helpText = this.scene.add
-      .text(width / 2, height / 2 + 90, 'Нажми пробел, кликни или тапни', {
+      .text(width / 2, height / 2 + 90, t('hud.startPrompt'), {
         fontFamily: HUD_FONT_FAMILY,
         fontSize: '22px',
         fontStyle: '700',
@@ -58,7 +59,7 @@ export class GameHud {
       .setDepth(HUD_DEPTH);
 
     this.liquidatedText = this.scene.add
-      .text(width / 2, Math.max(108, height / 2 - 210), 'ЛИКВИДИРОВАН', {
+      .text(width / 2, Math.max(108, height / 2 - 210), t('hud.liquidated'), {
         fontFamily: HUD_FONT_FAMILY,
         fontSize: `${Math.min(52, Math.max(34, width / 9))}px`,
         fontStyle: '900',
@@ -87,31 +88,31 @@ export class GameHud {
   }
 
   showBestScoreLoading(): void {
-    this.bestText.setText('Лучший: ...');
+    this.bestText.setText(t('hud.bestScoreLoading'));
   }
 
   showBestScoreUnavailable(): void {
-    this.bestText.setText('Лучший: недоступен');
+    this.bestText.setText(t('hud.bestScoreUnavailable'));
   }
 
   showGameOver(score: number): void {
     this.liquidatedText.setVisible(true);
     this.helpText
       .setPosition(this.scene.scale.width / 2, this.getGameOverHelpY())
-      .setText(`Счет: ${score}\nНажми R, пробел или тапни`)
+      .setText(t('hud.gameOverHelp', { score }))
       .setVisible(true);
     this.showLeaderboardLoading();
   }
 
   showLeaderboardLoading(): void {
     this.leaderboardContainer.setVisible(true);
-    this.leaderboardStatus.setText('Загружаем leaderboard...').setVisible(true);
+    this.leaderboardStatus.setText(t('hud.leaderboardLoading')).setVisible(true);
     this.leaderboardRows.forEach((row) => row.setVisible(false));
   }
 
   showLeaderboard(entries: NamorevoGoreLeaderboardEntry[], currentUserId: number | null): void {
     this.leaderboardContainer.setVisible(true);
-    this.leaderboardStatus.setVisible(entries.length === 0).setText('Пока нет результатов');
+    this.leaderboardStatus.setVisible(entries.length === 0).setText(t('hud.leaderboardEmpty'));
 
     const rows = entries.slice(0, LEADERBOARD_SIZE);
 
@@ -131,7 +132,7 @@ export class GameHud {
     });
   }
 
-  showLeaderboardError(message = 'Leaderboard недоступен'): void {
+  showLeaderboardError(message = t('hud.leaderboardError')): void {
     this.leaderboardContainer.setVisible(true);
     this.leaderboardStatus.setText(message).setVisible(true);
     this.leaderboardRows.forEach((row) => row.setVisible(false));
@@ -147,7 +148,7 @@ export class GameHud {
   }
 
   private formatBestScore(bestScore: number): string {
-    return `Лучший: ${bestScore}`;
+    return t('hud.bestScore', { score: bestScore });
   }
 
   private createLeaderboard(width: number, height: number): void {
@@ -159,7 +160,7 @@ export class GameHud {
     this.leaderboardPanel.setStrokeStyle(2, 0xffffff, 0.24);
 
     this.leaderboardTitle = this.scene.add
-      .text(0, -panelHeight / 2 + 20, 'LEADERBOARD', {
+      .text(0, -panelHeight / 2 + 20, t('hud.leaderboardTitle'), {
         fontFamily: HUD_FONT_FAMILY,
         fontSize: '18px',
         fontStyle: '900',
@@ -212,11 +213,10 @@ export class GameHud {
 
   private formatLeaderboardRow(place: number, entry: NamorevoGoreLeaderboardEntry): string {
     const score = String(entry.score);
-    const prefix = `${place}. `;
     const maxNameLength = Math.max(8, Math.floor((this.leaderboardPanelWidth - 92 - score.length * 8) / 8));
-    const name = this.truncate(entry.userName?.trim() || `Игрок ${entry.userId}`, maxNameLength);
+    const name = this.truncate(entry.userName?.trim() || t('hud.playerFallback', { userId: entry.userId }), maxNameLength);
 
-    return `${prefix}${name} - ${score}`;
+    return t('hud.leaderboardRow', { name, place, score });
   }
 
   private truncate(value: string, maxLength: number): string {
