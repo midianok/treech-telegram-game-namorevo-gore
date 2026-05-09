@@ -12,8 +12,8 @@ const resources = {
       },
       hud: {
         bestScore: 'Лучшая ликвидация: {{score}}',
-        bestScoreLoading: 'Лучший ликвидатор: ...',
-        bestScoreUnavailable: 'Лучший ликвидатор: недоступен',
+        bestScoreLoading: 'Лучшая ликвидация: ...',
+        bestScoreUnavailable: 'Лучшая ликвидация: недоступен',
         gameOverHelp: 'Счет: {{score}}\nНажми R, пробел или тапни',
         leaderboardEmpty: 'Пока нет ликвидаторов',
         leaderboardError: 'Список ликвидаторов недоступен',

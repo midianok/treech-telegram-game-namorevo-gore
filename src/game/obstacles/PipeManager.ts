@@ -50,6 +50,11 @@ export class PipeManager {
     this.destroyObjectsOutsideScreen(this.scorers, SCORER_MIN_X);
   }
 
+  setSpeed(speed: number): void {
+    this.pipes.setVelocityX(speed);
+    this.scorers.setVelocityX(speed);
+  }
+
   stop(): void {
     this.pipes.setVelocityX(0);
     this.scorers.setVelocityX(0);

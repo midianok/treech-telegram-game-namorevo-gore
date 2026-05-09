@@ -172,6 +172,7 @@ export class FlappyScene extends Phaser.Scene {
     scorerObject.destroy();
     this.hud.setScore(this.session.addPoint());
     this.hud.animateScore();
+    this.pipes.setSpeed(getPipeSpeed(this.session.score));
   }
 
   private endGame(): void {
@@ -313,5 +314,6 @@ export class FlappyScene extends Phaser.Scene {
     this.scale.resize(width, height);
     this.physics.world.setBounds(0, 0, width, height);
     this.world.resize(width, height);
+    this.hud.resize(height);
   }
 }

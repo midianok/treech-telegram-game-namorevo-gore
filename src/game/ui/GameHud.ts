@@ -48,7 +48,7 @@ export class GameHud {
       .setDepth(HUD_DEPTH);
 
     this.bestText = this.scene.add
-      .text(18, 18, this.formatBestScore(bestScore), {
+      .text(18, height - 48, this.formatBestScore(bestScore), {
         fontFamily: HUD_FONT_FAMILY,
         fontSize: '20px',
         fontStyle: '700',
@@ -56,6 +56,7 @@ export class GameHud {
         stroke: '#3d0020',
         strokeThickness: 4,
       })
+      .setOrigin(0, 1)
       .setDepth(HUD_DEPTH);
 
     this.liquidatedText = this.scene.add
@@ -73,6 +74,10 @@ export class GameHud {
       .setVisible(false);
 
     this.createLeaderboard(width, height);
+  }
+
+  resize(height: number): void {
+    this.bestText.setY(height - 48);
   }
 
   hideStartPrompt(): void {
