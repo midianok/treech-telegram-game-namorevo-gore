@@ -6,8 +6,6 @@ import type { ArcadeBodySprite } from '../types/physics';
 
 const BIRD_START_X = 130;
 const BIRD_SIZE = 68;
-const BIRD_BODY_RADIUS = 22;
-const BIRD_BODY_OFFSET = 6;
 const BIRD_DEPTH = 5;
 const IDLE_FLOAT_DISTANCE = 12;
 
@@ -20,7 +18,8 @@ export class Bird {
     this.sprite = this.scene.physics.add.sprite(BIRD_START_X, startY, AssetKey.Bird) as ArcadeBodySprite;
     this.sprite.setDisplaySize(BIRD_SIZE, BIRD_SIZE);
     this.sprite.setDepth(BIRD_DEPTH);
-    this.sprite.setCircle(BIRD_BODY_RADIUS, BIRD_BODY_OFFSET, BIRD_BODY_OFFSET);
+    this.sprite.body.setSize(BIRD_SIZE, BIRD_SIZE, false);
+    this.sprite.body.setOffset(0, 0);
     this.sprite.setCollideWorldBounds(false);
     this.body.setGravityY(0);
 
