@@ -2,10 +2,10 @@ import Phaser from 'phaser';
 
 import { GAME_HEIGHT, GAME_WIDTH } from './constants';
 import { FlappyScene } from '../scenes/FlappyScene';
+import { getTelegramViewportHeight } from '../telegram';
 
 export function createGameConfig(): Phaser.Types.Core.GameConfig {
-  const width = window.innerWidth || GAME_WIDTH;
-  const height = window.innerHeight || GAME_HEIGHT;
+  const { width, height } = getGameViewportSize();
 
   return {
     type: Phaser.AUTO,
@@ -24,5 +24,16 @@ export function createGameConfig(): Phaser.Types.Core.GameConfig {
       autoCenter: Phaser.Scale.NO_CENTER,
     },
     scene: [FlappyScene],
+  };
+}
+
+export function getGameViewportSize(): { width: number; height: number } {
+  const viewport = window.visualViewport;
+  const width = viewport?.width ?? window.innerWidth;
+  const height = getTelegramViewportHeight() ?? viewport?.height ?? window.innerHeight;
+
+  return {
+    width: Math.max(1, Math.ceil(width || GAME_WIDTH)),
+    height: Math.max(1, Math.ceil(height || GAME_HEIGHT)),
   };
 }

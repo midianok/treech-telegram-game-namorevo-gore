@@ -5,7 +5,7 @@ import { BIRD_GRAVITY, BIRD_JUMP_VELOCITY } from '../constants';
 import type { ArcadeBodySprite } from '../types/physics';
 
 const BIRD_START_X = 130;
-const BIRD_SIZE = 56;
+const BIRD_SIZE = 68;
 const BIRD_BODY_RADIUS = 22;
 const BIRD_BODY_OFFSET = 6;
 const IDLE_FLOAT_DISTANCE = 12;
