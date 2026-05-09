@@ -18,8 +18,7 @@ export class Bird {
     this.sprite = this.scene.physics.add.sprite(BIRD_START_X, startY, AssetKey.Bird) as ArcadeBodySprite;
     this.sprite.setDisplaySize(BIRD_SIZE, BIRD_SIZE);
     this.sprite.setDepth(BIRD_DEPTH);
-    this.sprite.body.setSize(BIRD_SIZE, BIRD_SIZE, false);
-    this.sprite.body.setOffset(0, 0);
+    this.sprite.body.setSize(this.sprite.width, this.sprite.height, true);
     this.sprite.setCollideWorldBounds(false);
     this.body.setGravityY(0);
 
