@@ -13,6 +13,37 @@ const SCORER_X_OFFSET = 8;
 const SCORER_MIN_X = -20;
 const PIPE_DEPTH = 3;
 
+// Контур pipe.png по анализу альфа-канала: конусообразный, узкий кончик (~42% ширины)
+// расширяется к основанию (~93%). Arcade Physics поддерживает только AABB на тело,
+// поэтому форма аппроксимируется лесенкой из нескольких прямоугольных зон.
+// yStart/yEnd — доли по высоте сверху вниз (для не-флипнутого спрайта: 0=кончик, 1=основание).
+// widthRatio — доля от PIPE_WIDTH.
+const PIPE_HITBOX_SEGMENTS: ReadonlyArray<{
+  yStart: number;
+  yEnd: number;
+  widthRatio: number;
+}> = [
+  { yStart: 0.02, yEnd: 0.05, widthRatio: 0.42 },
+  { yStart: 0.05, yEnd: 0.12, widthRatio: 0.62 },
+  { yStart: 0.12, yEnd: 0.22, widthRatio: 0.78 },
+  { yStart: 0.22, yEnd: 0.85, widthRatio: 0.84 },
+  { yStart: 0.85, yEnd: 0.99, widthRatio: 0.93 },
+];
+
+interface PipeLeaderZone extends Phaser.GameObjects.Zone {
+  pipeVisual: Phaser.GameObjects.Image;
+  pipeVisualOffsetY: number;
+}
+
+function isPipeLeaderZone(obj: unknown): obj is PipeLeaderZone {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'pipeVisual' in obj &&
+    (obj as { pipeVisual?: unknown }).pipeVisual !== undefined
+  );
+}
+
 export class PipeManager {
   private pipes!: Phaser.Physics.Arcade.Group;
   private scorers!: Phaser.Physics.Arcade.Group;
@@ -47,6 +78,7 @@ export class PipeManager {
   }
 
   update(): void {
+    this.syncPipeVisuals();
     this.destroyObjectsOutsideScreen(this.pipes, -PIPE_WIDTH);
     this.destroyObjectsOutsideScreen(this.scorers, SCORER_MIN_X);
   }
@@ -62,11 +94,41 @@ export class PipeManager {
   }
 
   private createPipe(x: number, y: number, height: number, speed: number, flipY: boolean): void {
-    const pipe = this.pipes.create(x, y, AssetKey.Pipe) as Phaser.Physics.Arcade.Sprite;
-    pipe.setDisplaySize(PIPE_WIDTH, height).refreshBody();
-    pipe.setDepth(PIPE_DEPTH);
-    pipe.setVelocityX(speed);
-    pipe.setFlipY(flipY);
+    const visual = this.scene.add.image(x, y, AssetKey.Pipe);
+    visual.setDisplaySize(PIPE_WIDTH, height);
+    visual.setFlipY(flipY);
+    visual.setDepth(PIPE_DEPTH);
+
+    const topY = y - height / 2;
+    const segments = flipY
+      ? PIPE_HITBOX_SEGMENTS.map((s) => ({
+          widthRatio: s.widthRatio,
+          yStart: 1 - s.yEnd,
+          yEnd: 1 - s.yStart,
+        }))
+      : PIPE_HITBOX_SEGMENTS;
+
+    let isLeader = true;
+    for (const seg of segments) {
+      const segHeight = (seg.yEnd - seg.yStart) * height;
+      const segCenterY = topY + ((seg.yStart + seg.yEnd) / 2) * height;
+      const segWidth = seg.widthRatio * PIPE_WIDTH;
+
+      const zone = this.scene.add.zone(x, segCenterY, segWidth, segHeight);
+      this.scene.physics.add.existing(zone);
+      this.pipes.add(zone);
+      const body = zone.body as Phaser.Physics.Arcade.Body;
+      body.setAllowGravity(false);
+      body.setImmovable(true);
+      body.setVelocityX(speed);
+
+      if (isLeader) {
+        const leader = zone as PipeLeaderZone;
+        leader.pipeVisual = visual;
+        leader.pipeVisualOffsetY = y - segCenterY;
+        isLeader = false;
+      }
+    }
   }
 
   private createScorer(x: number, y: number, height: number, speed: number): void {
@@ -79,11 +141,24 @@ export class PipeManager {
     scorer.scored = false;
   }
 
+  private syncPipeVisuals(): void {
+    this.pipes.children.each((child) => {
+      if (isPipeLeaderZone(child)) {
+        child.pipeVisual.x = child.x;
+        child.pipeVisual.y = child.y + child.pipeVisualOffsetY;
+      }
+      return true;
+    });
+  }
+
   private destroyObjectsOutsideScreen(group: Phaser.Physics.Arcade.Group, minX: number): void {
     group.children.each((child) => {
       const gameObject = child as Phaser.GameObjects.GameObject & { x: number };
 
       if (gameObject.x < minX) {
+        if (isPipeLeaderZone(gameObject)) {
+          gameObject.pipeVisual.destroy();
+        }
         gameObject.destroy();
       }
 
