@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   base: '/namorevo-gore/',
   server: {
+    allowedHosts: true,
     open: false,
     proxy: {
       '/saturn-api': {
