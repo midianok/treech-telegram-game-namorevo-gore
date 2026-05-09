@@ -13,6 +13,7 @@ declare global {
           chat?: {
             id?: number;
           };
+          start_param?: string;
         };
         HapticFeedback: {
           impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
@@ -49,6 +50,7 @@ export function hapticNotification(type: 'error' | 'success' | 'warning'): void 
 
 export function getTelegramPlayerContext(): TelegramPlayerContext | null {
   const userId = twa?.initDataUnsafe?.user?.id;
+  const launchChatId = getLaunchChatId();
 
   if (typeof userId !== 'number') {
     return null;
@@ -56,6 +58,26 @@ export function getTelegramPlayerContext(): TelegramPlayerContext | null {
 
   return {
     userId,
-    chatId: twa?.initDataUnsafe?.chat?.id ?? userId,
+    chatId: launchChatId ?? twa?.initDataUnsafe?.chat?.id ?? userId,
   };
+}
+
+function getLaunchChatId(): number | null {
+  const startParam = twa?.initDataUnsafe?.start_param ?? getUrlStartParam();
+  if (!startParam) {
+    return null;
+  }
+
+  const chatId = Number(startParam);
+  return Number.isSafeInteger(chatId) ? chatId : null;
+}
+
+function getUrlStartParam(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  const queryStartParam = params.get('tgWebAppStartParam') ?? params.get('startapp');
+  if (queryStartParam) {
+    return queryStartParam;
+  }
+
+  return new URLSearchParams(window.location.hash.replace(/^#/, '')).get('tgWebAppStartParam');
 }
