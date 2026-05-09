@@ -10,6 +10,7 @@ const SPEED_MAX = 2.5;
 const MAX_SPAWN_DELAY = 5000;
 const TOP_MARGIN = 60;
 const BOTTOM_MARGIN = GROUND_HEIGHT + 20;
+const MEME_DEPTH = 1;
 
 const MEME_URLS: string[] = Array.from(
   { length: MEME_COUNT },
@@ -110,7 +111,7 @@ export class MemeLayer {
 
     const img = this.scene.add.image(this.width + displayWidth, 0, key);
     const scale = displayWidth / img.width;
-    img.setScale(scale).setAlpha(0.92);
+    img.setScale(scale).setAlpha(0.92).setDepth(MEME_DEPTH);
 
     const minY = TOP_MARGIN + img.displayHeight / 2;
     const maxY = this.height - BOTTOM_MARGIN - img.displayHeight / 2;
