@@ -1,6 +1,7 @@
 import { PIPE_GAP, PIPE_SPEED } from './constants';
 
-const SCORE_PER_DIFFICULTY_LEVEL = 5;
+const STARTING_DIFFICULTY_LEVEL = 1;
+const SCORE_PER_DIFFICULTY_LEVEL = 3;
 const MAX_DIFFICULTY_LEVEL = 8;
 const PIPE_SPEED_STEP = 15;
 const PIPE_GAP_STEP = 6;
@@ -10,7 +11,10 @@ const PIPE_SPAWN_DELAY_STEP_MS = 55;
 const MIN_PIPE_SPAWN_DELAY_MS = 1000;
 
 export function getDifficultyLevel(score: number): number {
-  return Math.min(Math.floor(score / SCORE_PER_DIFFICULTY_LEVEL), MAX_DIFFICULTY_LEVEL);
+  return Math.min(
+    STARTING_DIFFICULTY_LEVEL + Math.floor(score / SCORE_PER_DIFFICULTY_LEVEL),
+    MAX_DIFFICULTY_LEVEL,
+  );
 }
 
 export function getPipeSpeed(score: number): number {

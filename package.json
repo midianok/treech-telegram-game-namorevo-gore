@@ -9,6 +9,7 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "i18next": "^26.0.10",
     "phaser": "^3.90.0"
   },
   "devDependencies": {

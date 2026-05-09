@@ -1,4 +1,5 @@
 import { apiFetch } from '../api';
+import { t } from '../i18n';
 
 export interface AddNamorevoGoreScoreRequest {
   userId: number;
@@ -25,7 +26,7 @@ export class NamorevoGoreApi {
     });
 
     if (!response.ok) {
-      throw new Error(`NamorevoGore score request failed with ${response.status}`);
+      throw new Error(t('api.scoreRequestFailed', { status: response.status }));
     }
   }
 
@@ -38,13 +39,13 @@ export class NamorevoGoreApi {
     });
 
     if (!response.ok) {
-      throw new Error(`NamorevoGore leaderboard request failed with ${response.status}`);
+      throw new Error(t('api.leaderboardRequestFailed', { status: response.status }));
     }
 
     const data: unknown = await response.json();
 
     if (!Array.isArray(data)) {
-      throw new Error('NamorevoGore leaderboard response is not an array');
+      throw new Error(t('api.leaderboardResponseNotArray'));
     }
 
     return data.map((entry) => this.normalizeLeaderboardEntry(entry));
@@ -62,7 +63,7 @@ export class NamorevoGoreApi {
     }
 
     if (!response.ok) {
-      throw new Error(`NamorevoGore user score request failed with ${response.status}`);
+      throw new Error(t('api.userScoreRequestFailed', { status: response.status }));
     }
 
     const data: unknown = await response.json();
@@ -76,7 +77,7 @@ export class NamorevoGoreApi {
 
   private normalizeLeaderboardEntry(entry: unknown): NamorevoGoreLeaderboardEntry {
     if (!entry || typeof entry !== 'object') {
-      throw new Error('NamorevoGore leaderboard entry is not an object');
+      throw new Error(t('api.leaderboardEntryNotObject'));
     }
 
     const record = entry as Record<string, unknown>;
@@ -84,7 +85,7 @@ export class NamorevoGoreApi {
     const score = Number(record.score);
 
     if (!Number.isFinite(userId) || !Number.isFinite(score)) {
-      throw new Error('NamorevoGore leaderboard entry contains invalid numbers');
+      throw new Error(t('api.invalidLeaderboardEntryNumbers'));
     }
 
     return {
