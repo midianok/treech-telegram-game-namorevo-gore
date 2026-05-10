@@ -13,7 +13,7 @@ export interface NamorevoGoreLeaderboardEntry {
   score: number;
 }
 
-const NAMOREVO_GORE_API_PATH = '/saturn-api/api/namorevo-gore';
+const NAMOREVO_GORE_API_PATH = '/api/namorevo-gore';
 
 export class NamorevoGoreApi {
   async submitScore(request: AddNamorevoGoreScoreRequest): Promise<void> {

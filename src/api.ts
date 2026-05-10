@@ -1,4 +1,4 @@
-const apiBase = import.meta.env.VITE_API_BASE_URL ?? '';
+const apiBase = import.meta.env.VITE_API_BASE_URL ?? '/saturn-api';
 
 interface TelegramInitDataSource {
   Telegram?: {
