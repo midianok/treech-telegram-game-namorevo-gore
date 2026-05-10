@@ -254,32 +254,23 @@ export class FlappyScene extends Phaser.Scene {
     try {
       const currentUserScore = await this.namorevoGoreApi.getUserScore(this.playerContext.userId);
       const currentBestScore = currentUserScore?.score ?? 0;
+      const newBestScore = Math.max(currentBestScore, score);
+
+      if (score > currentBestScore) {
+        await this.namorevoGoreApi.submitScore({
+          userId: this.playerContext.userId,
+          chatId: this.playerContext.chatId,
+          score,
+        });
+      }
 
       if (requestId !== this.scoreSyncRequestId) {
         return;
       }
 
-      this.session.bestScore = Math.max(this.session.bestScore, currentBestScore);
+      this.session.bestScore = newBestScore;
       this.userBestScoreLoaded = true;
-      this.hud.setBestScore(this.session.bestScore);
-
-      if (score <= currentBestScore) {
-        return;
-      }
-
-      await this.namorevoGoreApi.submitScore({
-        userId: this.playerContext.userId,
-        chatId: this.playerContext.chatId,
-        score,
-      });
-
-      if (requestId !== this.scoreSyncRequestId) {
-        return;
-      }
-
-      this.session.bestScore = score;
-      this.userBestScoreLoaded = true;
-      this.hud.setBestScore(score);
+      this.hud.setBestScore(newBestScore);
     } catch (error) {
       if (requestId !== this.scoreSyncRequestId) {
         return;
