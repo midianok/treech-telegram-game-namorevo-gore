@@ -14,7 +14,7 @@ No test suite exists. Type checking via `tsc` runs as part of `npm run build`.
 
 ## Architecture
 
-**Treech Flappy** is a Telegram Web App-integrated Flappy Bird-style game built with Phaser 3, TypeScript, and Vite. The game deploys to subdirectory `/namorevo-gore/` and communicates with a backend at `/saturn-api` (proxied to `localhost:5001` in dev).
+**Namorevo Gore** is a Telegram Web App-integrated Flappy Bird-style game built with Phaser 3, TypeScript, and Vite. The game deploys to subdirectory `/namorevo-gore/` and communicates with a backend at `/saturn-api` (proxied to `localhost:5001` in dev).
 
 ### Entry Point Flow
 

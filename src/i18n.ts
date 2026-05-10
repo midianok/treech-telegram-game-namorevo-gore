@@ -7,7 +7,7 @@ const resources = {
     translation: {
       app: {
         language: 'ru',
-        title: 'Flappy Namor',
+        title: 'Namorevo Gore',
         description: 'Ликвидация намора',
       },
       hud: {
