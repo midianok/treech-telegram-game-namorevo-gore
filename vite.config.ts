@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH ?? '/namorevo-gore/',
+  base: process.env.VITE_BASE_PATH ?? '/treech-telegram-game-namorevo-gore/',
   server: {
     allowedHosts: true,
     open: false,
