@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/namorevo-gore/',
+  base: process.env.VITE_BASE_PATH ?? '/namorevo-gore/',
   server: {
     allowedHosts: true,
     open: false,
