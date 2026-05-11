@@ -56,6 +56,12 @@ export class FlappyScene extends Phaser.Scene {
   }
 
   preload(): void {
+    const progressEl = document.getElementById('loading-progress');
+    if (progressEl) {
+      this.load.on('progress', (value: number) => {
+        progressEl.style.width = `${Math.round(value * 100)}%`;
+      });
+    }
     preloadGameAssets(this);
   }
 
@@ -96,6 +102,12 @@ export class FlappyScene extends Phaser.Scene {
       offTelegramViewportChanged(this.handleViewportResize);
     });
     this.time.delayedCall(0, this.handleViewportResize);
+
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+      loadingScreen.classList.add('hidden');
+      loadingScreen.addEventListener('transitionend', () => loadingScreen.remove(), { once: true });
+    }
   }
 
   update(): void {
