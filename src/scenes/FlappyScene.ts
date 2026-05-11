@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 
 import { NamorevoGoreApi } from '../api/namorevoGore';
 import { preloadGameAssets } from '../game/assets';
-import { AssetKey, FinishSoundKeys } from '../game/assetKeys';
 import { getGameViewportSize } from '../game/config';
 import { getPipeSpawnDelay, getPipeSpeed } from '../game/difficulty';
 import { Bird } from '../game/entities/Bird';
@@ -35,7 +34,6 @@ export class FlappyScene extends Phaser.Scene {
   private hud!: GameHud;
   private pipes!: PipeManager;
   private world!: GameWorld;
-  private flySound!: Phaser.Sound.BaseSound;
   private playerContext = getTelegramPlayerContext();
   private pipeTimer: Phaser.Time.TimerEvent | null = null;
   private scoreSyncRequestId = 0;
@@ -74,7 +72,6 @@ export class FlappyScene extends Phaser.Scene {
     this.bird.create(this.height / 2);
     this.hud.create(this.width, this.height, this.session.bestScore);
     this.pipes.create();
-    this.flySound = this.sound.add(AssetKey.FlySound);
 
     if (this.playerContext) {
       this.hud.showBestScoreLoading();
@@ -135,10 +132,6 @@ export class FlappyScene extends Phaser.Scene {
     }
 
     hapticImpact('light');
-    if (this.flySound.isPlaying) {
-      this.flySound.stop();
-    }
-    this.flySound.play();
     this.bird.flap();
   }
 
@@ -192,10 +185,6 @@ export class FlappyScene extends Phaser.Scene {
     this.pipeTimer?.remove(false);
     this.bird.markDead();
     this.pipes.stop();
-    const finishKey = FinishSoundKeys[Math.floor(Math.random() * FinishSoundKeys.length)];
-    const finishSound = this.sound.add(finishKey);
-    finishSound.once(Phaser.Sound.Events.COMPLETE, () => finishSound.destroy());
-    finishSound.play();
 
     if (!this.playerContext && this.session.commitBestScore()) {
       this.bestScoreRepository.write(this.session.bestScore);
