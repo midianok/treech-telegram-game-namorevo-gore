@@ -2,9 +2,6 @@ export const AssetKey = {
   Bird: 'bird',
   Pipe: 'pipe',
   Wall: 'wall',
-  Ceiling: 'ceiling',
-  Chains: 'chains',
-  Decor: 'decor',
   Ground: 'ground',
   FlySound: 'fly',
 } as const;

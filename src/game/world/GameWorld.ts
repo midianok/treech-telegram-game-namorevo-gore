@@ -10,9 +10,6 @@ const GROUND_BODY_OFFSET_Y = 16;
 export class GameWorld {
   private background!: Phaser.GameObjects.Rectangle;
   private wall!: Phaser.GameObjects.TileSprite;
-  private ceiling!: Phaser.GameObjects.TileSprite;
-  private chains!: Phaser.GameObjects.TileSprite;
-  private decor!: Phaser.GameObjects.TileSprite;
   private memeLayer!: MemeLayer;
   private ground!: Phaser.GameObjects.TileSprite;
   private groundTopY = 0;
@@ -24,9 +21,6 @@ export class GameWorld {
     this.groundTopY = height - GROUND_HEIGHT;
 
     this.wall = this.scene.add.tileSprite(width / 2, height / 2, width, height, AssetKey.Wall);
-    this.ceiling = this.scene.add.tileSprite(width / 2, 20, width, 40, AssetKey.Ceiling);
-    this.chains = this.scene.add.tileSprite(width / 2, 135, width, 200, AssetKey.Chains);
-    this.decor = this.scene.add.tileSprite(width / 2, height - 190, width, 240, AssetKey.Decor);
     this.memeLayer = new MemeLayer(this.scene);
     this.memeLayer.create(width, height);
     this.ground = this.scene.add.tileSprite(
@@ -49,9 +43,6 @@ export class GameWorld {
 
     this.background.setPosition(width / 2, height / 2).setSize(width, height);
     this.wall.setPosition(width / 2, height / 2).setSize(width, height);
-    this.ceiling.setPosition(width / 2, 20).setSize(width, 40);
-    this.chains.setPosition(width / 2, 135).setSize(width, 200);
-    this.decor.setPosition(width / 2, groundTopY - 118).setSize(width, 240);
     this.memeLayer.resize(width, height);
     this.ground.setPosition(width / 2, groundTopY + groundHeight / 2).setSize(width, groundHeight);
 
@@ -66,9 +57,6 @@ export class GameWorld {
 
   update(isRunning: boolean, pipeSpeed: number): void {
     this.wall.tilePositionX += 0.05;
-    this.ceiling.tilePositionX += 0.3;
-    this.chains.tilePositionX += 0.15;
-    this.decor.tilePositionX += 0.5;
     this.memeLayer.update();
     this.ground.tilePositionX += isRunning ? pipeSpeed * -0.013 : 0.6;
   }
