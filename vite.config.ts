@@ -15,6 +15,9 @@ export default defineConfig({
       },
     },
   },
+  optimizeDeps: {
+    include: ['phaser'],
+  },
   build: {
     target: 'es2022',
     sourcemap: true,
