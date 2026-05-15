@@ -4,12 +4,17 @@ type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 const SOURCE = 'namorevo-gore';
 
-function send(level: LogLevel, message: string, data?: Record<string, unknown>): void {
+function send(
+  level: LogLevel,
+  message: string,
+  context: Record<string, unknown>,
+  data?: Record<string, unknown>,
+): void {
   const body = {
     source: SOURCE,
     level,
     message,
-    data: data !== undefined ? JSON.stringify(data) : undefined,
+    data: JSON.stringify({ ...context, ...data }),
   };
 
   apiFetch('/api/logs', {
@@ -22,8 +27,20 @@ function send(level: LogLevel, message: string, data?: Record<string, unknown>):
   });
 }
 
-export const logger = {
-  info: (message: string, data?: Record<string, unknown>) => send('info', message, data),
-  warn: (message: string, data?: Record<string, unknown>) => send('warn', message, data),
-  error: (message: string, data?: Record<string, unknown>) => send('error', message, data),
-};
+export interface Logger {
+  info(message: string, data?: Record<string, unknown>): void;
+  warn(message: string, data?: Record<string, unknown>): void;
+  error(message: string, data?: Record<string, unknown>): void;
+  withContext(context: Record<string, unknown>): Logger;
+}
+
+function createLogger(context: Record<string, unknown> = {}): Logger {
+  return {
+    info: (message, data) => send('info', message, context, data),
+    warn: (message, data) => send('warn', message, context, data),
+    error: (message, data) => send('error', message, context, data),
+    withContext: (extra) => createLogger({ ...context, ...extra }),
+  };
+}
+
+export const logger = createLogger();
