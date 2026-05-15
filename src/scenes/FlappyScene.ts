@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 
+import { logger } from '../api/logger';
 import { NamorevoGoreApi } from '../api/namorevoGore';
 import { preloadGameAssets } from '../game/assets';
 import { AssetKey, FinishSoundKeys } from '../game/assetKeys';
@@ -70,6 +71,12 @@ export class FlappyScene extends Phaser.Scene {
     this.playerContext = getTelegramPlayerContext();
     this.userBestScoreLoaded = false;
     this.session.reset(this.playerContext ? 0 : this.bestScoreRepository.read());
+
+    logger.info('scene created', {
+      userId: this.playerContext?.userId ?? null,
+      chatId: this.playerContext?.chatId ?? null,
+      localBestScore: this.session.bestScore,
+    });
 
     this.world = new GameWorld(this);
     this.bird = new Bird(this);
@@ -155,6 +162,11 @@ export class FlappyScene extends Phaser.Scene {
   }
 
   private startGame(): void {
+    logger.info('game started', {
+      userId: this.playerContext?.userId ?? null,
+      chatId: this.playerContext?.chatId ?? null,
+      bestScore: this.session.bestScore,
+    });
     this.session.start();
     this.bird.enableGravity();
     this.bird.stopIdleAnimation();
@@ -199,6 +211,12 @@ export class FlappyScene extends Phaser.Scene {
       return;
     }
 
+    logger.info('game over', {
+      userId: this.playerContext?.userId ?? null,
+      chatId: this.playerContext?.chatId ?? null,
+      score: this.session.score,
+      bestScore: this.session.bestScore,
+    });
     this.session.end();
     hapticNotification('error');
     this.pipeTimer?.remove(false);
@@ -238,12 +256,20 @@ export class FlappyScene extends Phaser.Scene {
       this.session.bestScore = bestScore;
       this.userBestScoreLoaded = true;
       this.hud.setBestScore(bestScore);
+      logger.info('user best score loaded', {
+        userId: this.playerContext.userId,
+        bestScore,
+      });
     } catch (error) {
       if (requestId !== this.bestScoreRequestId) {
         return;
       }
 
       console.error(t('log.failedToLoadUserScore'), error);
+      logger.error('failed to load user best score', {
+        userId: this.playerContext.userId,
+        error: String(error),
+      });
       this.userBestScoreLoaded = false;
       this.hud.showBestScoreUnavailable();
     }
@@ -258,6 +284,10 @@ export class FlappyScene extends Phaser.Scene {
         return;
       }
 
+      logger.info('leaderboard loaded', {
+        userId: this.playerContext?.userId ?? null,
+        entryCount: leaderboard.length,
+      });
       this.hud.showLeaderboard(leaderboard, this.playerContext?.userId ?? null);
     } catch (error) {
       if (requestId !== this.scoreSyncRequestId) {
@@ -265,6 +295,10 @@ export class FlappyScene extends Phaser.Scene {
       }
 
       console.error(t('log.failedToSyncLeaderboard'), error);
+      logger.error('failed to load leaderboard', {
+        userId: this.playerContext?.userId ?? null,
+        error: String(error),
+      });
       this.hud.showLeaderboardError();
     }
   }
@@ -289,6 +323,11 @@ export class FlappyScene extends Phaser.Scene {
     } catch (error) {
       if (requestId === this.scoreSyncRequestId) {
         console.error(t('log.failedToSyncUserScore'), error);
+        logger.error('failed to fetch user score before submit', {
+          userId,
+          score,
+          error: String(error),
+        });
         if (!this.userBestScoreLoaded) {
           this.hud.showBestScoreUnavailable();
         }
@@ -297,12 +336,26 @@ export class FlappyScene extends Phaser.Scene {
     }
 
     if (score <= currentBestScore) {
+      logger.info('score not a new record, skipping submit', {
+        userId,
+        score,
+        serverBestScore: currentBestScore,
+      });
       return;
     }
+
+    logger.info('submitting new best score', {
+      userId,
+      chatId,
+      score,
+      previousBestScore: currentBestScore,
+    });
 
     try {
       // Отправляем очки вне зависимости от requestId — рестарт сцены не должен прерывать отправку
       await this.namorevoGoreApi.submitScore({ userId, chatId, score });
+
+      logger.info('score submitted successfully', { userId, score });
 
       if (requestId !== this.scoreSyncRequestId) {
         return;
@@ -312,6 +365,13 @@ export class FlappyScene extends Phaser.Scene {
       this.userBestScoreLoaded = true;
       this.hud.setBestScore(score);
     } catch (error) {
+      logger.error('failed to submit score', {
+        userId,
+        chatId,
+        score,
+        error: String(error),
+      });
+
       if (requestId !== this.scoreSyncRequestId) {
         return;
       }
