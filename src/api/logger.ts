@@ -14,7 +14,7 @@ function send(
     source: SOURCE,
     level,
     message,
-    data: JSON.stringify({ ...context, ...data }),
+    data: { ...context, ...data },
   };
 
   apiFetch('/api/logs', {
