@@ -29,6 +29,7 @@ jobs:
 
       - run: npm run build
         env:
+          VITE_BASE_PATH: /treech-telegram-game-namorevo-gore/
           VITE_API_BASE_URL: https://routefabric.ru/saturn-api
 
       - uses: actions/upload-pages-artifact@v3
