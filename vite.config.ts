@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import { namorevoGoreApiMockPlugin } from './vite.namorevoGoreApiMock';
 
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH ?? '/treech-telegram-game-namorevo-gore/',
+  base: process.env.VITE_BASE_PATH ?? '',
   plugins: [namorevoGoreApiMockPlugin()],
   server: {
     allowedHosts: true,
