@@ -17,16 +17,23 @@ const NAMOREVO_GORE_API_PATH = '/api/namorevo-gore';
 
 export class NamorevoGoreApi {
   async submitScore(request: AddNamorevoGoreScoreRequest): Promise<void> {
-    const response = await apiFetch(`${NAMOREVO_GORE_API_PATH}/score`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
+    const RETRY_DELAYS_MS = [300, 600];
 
-    if (!response.ok) {
-      throw new Error(t('api.scoreRequestFailed', { status: response.status }));
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const response = await apiFetch(`${NAMOREVO_GORE_API_PATH}/score`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(request),
+          keepalive: true,
+        });
+
+        if (response.ok) return;
+        throw new Error(t('api.scoreRequestFailed', { status: response.status }));
+      } catch (error) {
+        if (attempt >= RETRY_DELAYS_MS.length) throw error;
+        await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+      }
     }
   }
 

@@ -274,27 +274,35 @@ export class FlappyScene extends Phaser.Scene {
       return;
     }
 
+    const { userId, chatId } = this.playerContext;
+    let currentBestScore = 0;
+
     try {
-      const currentUserScore = await this.namorevoGoreApi.getUserScore(this.playerContext.userId);
-      const currentBestScore = currentUserScore?.score ?? 0;
+      const currentUserScore = await this.namorevoGoreApi.getUserScore(userId);
+      currentBestScore = currentUserScore?.score ?? 0;
 
-      if (requestId !== this.scoreSyncRequestId) {
-        return;
+      if (requestId === this.scoreSyncRequestId) {
+        this.session.bestScore = Math.max(this.session.bestScore, currentBestScore);
+        this.userBestScoreLoaded = true;
+        this.hud.setBestScore(this.session.bestScore);
       }
-
-      this.session.bestScore = Math.max(this.session.bestScore, currentBestScore);
-      this.userBestScoreLoaded = true;
-      this.hud.setBestScore(this.session.bestScore);
-
-      if (score <= currentBestScore) {
-        return;
+    } catch (error) {
+      if (requestId === this.scoreSyncRequestId) {
+        console.error(t('log.failedToSyncUserScore'), error);
+        if (!this.userBestScoreLoaded) {
+          this.hud.showBestScoreUnavailable();
+        }
       }
+      // currentBestScore остаётся 0, чтобы не блокировать отправку очков
+    }
 
-      await this.namorevoGoreApi.submitScore({
-        userId: this.playerContext.userId,
-        chatId: this.playerContext.chatId,
-        score,
-      });
+    if (score <= currentBestScore) {
+      return;
+    }
+
+    try {
+      // Отправляем очки вне зависимости от requestId — рестарт сцены не должен прерывать отправку
+      await this.namorevoGoreApi.submitScore({ userId, chatId, score });
 
       if (requestId !== this.scoreSyncRequestId) {
         return;
